@@ -1,8 +1,31 @@
 package zeroordered
 
 import (
+	"math"
 	"testing"
 )
+
+func BenchmarkFibonacciSearch(b *testing.B) {
+	testFunc := func(x float64) float64 {
+		return math.Pow(x-2, 2)
+	}
+	a, c, eps := 0.0, 4.0, 1e-5
+
+	for i := 0; i < b.N; i++ {
+		FibonacciSearch(testFunc, a, c, eps)
+	}
+}
+
+func BenchmarkGoldenSectionSearch(b *testing.B) {
+	testFunc := func(x float64) float64 {
+		return math.Pow(x-2, 2)
+	}
+	a, c, eps := 0.0, 4.0, 1e-5
+
+	for i := 0; i < b.N; i++ {
+		GoldenSectionSearch(testFunc, a, c, eps)
+	}
+}
 
 func TestPassiveSearch(t *testing.T) {
 	a := 0.5
@@ -48,7 +71,7 @@ func TestDichotomySearch(t *testing.T) {
 	if bFinal-2.05 > eps {
 		t.Errorf("bFinal = %v, expected 2.05", bFinal)
 	}
-	if iterations != 4 {
+	if iterations != 5 {
 		t.Errorf("iterations = %v, expected 4", iterations)
 	}
 }
@@ -86,7 +109,7 @@ func TestFibonacciSearch(t *testing.T) {
 	if fmin-2.85 > eps {
 		t.Errorf("fmin = %v, expected 2.85", fmin)
 	}
-	if i != 4 {
-		t.Errorf("i = %v, expected 4", i)
+	if i != 6 {
+		t.Errorf("i = %v, expected 6", i)
 	}
 }

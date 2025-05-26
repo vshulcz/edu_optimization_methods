@@ -4,7 +4,24 @@ import (
 	"math"
 )
 
-func PassiveSearch(f func(x float64) float64, a, b, eps float64) (xmin, fmin float64, iterations int) {
+// PassiveSearch реализует метод пассивного поиска (равномерного перебора)
+// для одномерной минимизации функции f на отрезке [a, b] с заданной точностью eps.
+//
+// Алгоритм делит отрезок [a, b] на k равных частей, где k ≥ (b - a)/eps,
+// и вычисляет значения функции в точках x_i = a + i*(b - a)/k для i = 0..k.
+// Возвращается точка xmin, в которой достигается минимальное значение fmin,
+// а также количество вызовов функции f (iters).
+//
+// Особенности:
+// - Простой и надёжный, но неэффективный при высокой точности (большое число итераций).
+// - Не использует информацию о поведении функции, только значения в равномерных точках.
+// - Погрешность не превышает (b - a)/k ≤ eps.
+func PassiveSearch(f func(x float64) float64, a, b, eps float64) (xmin, fmin float64, iters int) {
+	phiF := func(x_ float64) float64 {
+		iters++
+		return f(x_)
+	}
+
 	k := int(math.Ceil((b - a) / eps))
 
 	minVal := math.Inf(1)
@@ -12,54 +29,98 @@ func PassiveSearch(f func(x float64) float64, a, b, eps float64) (xmin, fmin flo
 
 	for i := 0; i <= k; i++ {
 		x := a + float64(i)*(b-a)/float64(k)
-		val := f(x)
+		val := phiF(x)
 		if val < minVal {
 			minVal = val
 			minX = x
 		}
-		iterations++
 	}
 
-	return minX, minVal, iterations
+	return minX, minVal, iters
 }
 
-func DichotomySearch(f func(x float64) float64, a, b, eps, delta float64) (xmin, fmin, aFinal, bFinal float64, iterations int) {
+// DichotomySearch реализует метод дихотомии (двоичного поиска) для одномерной минимизации функции f
+// на отрезке [a, b] с заданной точностью eps и параметром delta (малая положительная величина).
+//
+// На каждой итерации алгоритм вычисляет две точки c и d, симметрично расположенные вокруг середины отрезка,
+// на расстоянии delta/2, и сравнивает значения функции в этих точках.
+//
+// Если f(c) <= f(d), то отрезок локализации сужается до [a, d], иначе — до [c, b].
+// Цикл продолжается до тех пор, пока длина отрезка локализации не станет меньше или равна 2*eps.
+//
+// Особенности:
+//   - Точка минимума определяется как середина финального отрезка [aFinal, bFinal].
+//   - delta влияет на точность вычислений: при слишком малом значении требуется высокая точность f,
+//     иначе можно ошибочно "отбросить" часть, содержащую минимум.
+//   - Количество итераций логарифмически зависит от начальной длины отрезка и eps.
+//   - Алгоритм подходит для унимодальных функций (имеющих единственный минимум на [a, b]).
+//
+// Возвращает найденное значение xmin, значение функции в этой точке fmin,
+// а также границы финального локализующего отрезка и число вызовов f (iters).
+func DichotomySearch(f func(x float64) float64, a, b, eps, delta float64) (xmin, fmin, aFinal, bFinal float64, iters int) {
+	phiF := func(x_ float64) float64 {
+		iters++
+		return f(x_)
+	}
 	for (b-a)/2.0 > eps {
 		mid := (a + b) / 2.0
 		c := mid - delta/2.0
 		d := mid + delta/2.0
 
-		iterations += 2
-		if f(c) <= f(d) {
+		if phiF(c) <= phiF(d) {
 			b = d
 		} else {
 			a = c
 		}
 	}
 	xmin = (a + b) / 2.0
-	fmin = f(xmin)
+	fmin = phiF(xmin)
 	aFinal = a
 	bFinal = b
 	return
 }
 
-func GoldenSectionSearch(f func(x float64) float64, a, b, eps float64) (xmin, fmin float64, i int) {
+// GoldenSectionSearch реализует метод золотого сечения для поиска минимума функции f
+// на отрезке [a, b] с заданной точностью eps.
+//
+// Алгоритм основан на использовании пропорций золотого сечения для сокращения отрезка локализации,
+// что позволяет вычислять значение функции только в одной новой точке на каждой итерации.
+//
+// На первой итерации вычисляются две точки c и d, делящие отрезок в пропорции золотого сечения:
+// c = a + (3 - √5)/2 * (b - a),  d = a + (√5 - 1)/2 * (b - a)
+//
+// Далее сравниваются значения f(c) и f(d), и отрезок [a, b] сужается в сторону меньшего значения.
+// При этом одна из точек (c или d) сохраняется, и вычисляется только одно новое значение функции.
+//
+// Цикл продолжается, пока длина отрезка не станет ≤ 2 * eps.
+// Минимум оценивается как середина финального отрезка.
+//
+// Особенности:
+// - Экономит вычисления функции: 1 новое значение f на каждой итерации после первой.
+// - Эффективен для унимодальных функций.
+// - Длина отрезка уменьшается на фиксированную долю (≈ 0.618) на каждом шаге.
+//
+// Возвращает точку минимума xmin, значение функции в ней fmin и общее число вызовов функции f (iters).
+func GoldenSectionSearch(f func(x float64) float64, a, b, eps float64) (xmin, fmin float64, iters int) {
+	phiF := func(x_ float64) float64 {
+		iters++
+		return f(x_)
+	}
 	ad := (math.Sqrt(5) - 1) / 2
 	ac := (3 - math.Sqrt(5)) / 2
 
 	c := a + ac*(b-a)
 	d := a + ad*(b-a)
-	fc := f(c)
-	fd := f(d)
+	fc := phiF(c)
+	fd := phiF(d)
 
-	i = 2
 	for (b-a)/2.0 > eps {
 		if fc <= fd {
 			b = d
 			d = c
 			fd = fc
 			c = a + ac*(b-a)
-			fc = f(c)
+			fc = phiF(c)
 		} else {
 			a = c
 			c = d
@@ -67,15 +128,41 @@ func GoldenSectionSearch(f func(x float64) float64, a, b, eps float64) (xmin, fm
 			d = a + ad*(b-a)
 			fd = f(d)
 		}
-		i++
 	}
 
 	xmin = (a + b) / 2.0
-	fmin = f(xmin)
+	fmin = phiF(xmin)
 	return
 }
 
-func FibonacciSearch(f func(x float64) float64, a, b, eps float64) (xmin, fmin float64, iterations int) {
+// FibonacciSearch реализует метод Фибоначчи для одномерной минимизации функции f
+// на отрезке [a, b] с заданной точностью eps.
+//
+// Алгоритм использует последовательность Фибоначчи для последовательного сужения отрезка,
+// содержащего минимум функции. Количество шагов определяется числом n, при котором
+// F(n) ≥ (b - a)/eps. Это позволяет заранее задать число итераций.
+//
+// На каждой итерации вычисляются точки x1 и x2, определённые через соотношения чисел Фибоначчи:
+// x1 = a + F(n-2)/F(n)*(b - a)
+// x2 = a + F(n-1)/F(n)*(b - a)
+//
+// Затем отрезок локализации сужается в зависимости от значений функции f(x1) и f(x2),
+// при этом используется лишь одно новое вычисление f на итерацию (аналогично методу золотого сечения).
+//
+// После n−2 шагов проводится финальная проверка на интервале длиной ≈ eps,
+// и минимум оценивается как середина финального отрезка.
+//
+// Особенности:
+// - Метод гарантирует достижение заданной точности за фиксированное число шагов.
+// - Эффективен при заранее известном числе итераций, экономит вызовы f.
+// - Требует генерации последовательности Фибоначчи до достижения нужной длины.
+//
+// Возвращает точку минимума xmin, значение функции в этой точке fmin и количество вызовов функции f (iters).
+func FibonacciSearch(f func(x float64) float64, a, b, eps float64) (xmin, fmin float64, iters int) {
+	phiF := func(x_ float64) float64 {
+		iters++
+		return f(x_)
+	}
 	fib := []float64{1, 1}
 	var n int
 	for i := 2; ; i++ {
@@ -89,38 +176,31 @@ func FibonacciSearch(f func(x float64) float64, a, b, eps float64) (xmin, fmin f
 		n = 3
 	}
 
-	iterations = 0
-	eval := func(x float64) float64 {
-		iterations++
-		return f(x)
-	}
-
 	a_n, b_n := a, b
 	x1 := a_n + fib[n-2]/fib[n]*(b_n-a_n)
 	x2 := a_n + fib[n-1]/fib[n]*(b_n-a_n)
-	f1 := eval(x1)
-	f2 := eval(x2)
+	f1 := phiF(x1)
+	f2 := phiF(x2)
 
-	iterations = 1
 	for k := 1; k <= n-3; k++ {
 		if f1 > f2 {
 			a_n = x1
 			x1 = x2
 			f1 = f2
 			x2 = a_n + fib[n-k-1]/fib[n-k]*(b_n-a_n)
-			f2 = eval(x2)
+			f2 = phiF(x2)
 		} else {
 			b_n = x2
 			x2 = x1
 			f2 = f1
 			x1 = a_n + fib[n-k-2]/fib[n-k]*(b_n-a_n)
-			f1 = eval(x1)
+			f1 = phiF(x1)
 		}
 	}
 
 	delta := eps / 10.0
 	x2 = x1 + delta
-	f2 = eval(x2)
+	f2 = phiF(x2)
 	if f1 > f2 {
 		a_n = x1
 	} else {
@@ -128,6 +208,6 @@ func FibonacciSearch(f func(x float64) float64, a, b, eps float64) (xmin, fmin f
 	}
 
 	xmin = (a_n + b_n) / 2.0
-	fmin = f(xmin)
+	fmin = phiF(xmin)
 	return
 }

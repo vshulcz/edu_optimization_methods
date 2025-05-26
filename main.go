@@ -55,7 +55,7 @@ func main() {
 	fmt.Printf("Минимум найден в точке x = %f, f(x) = %f\n", xmin, fmin)
 	fmt.Printf("Количество итераций: %d\n\n", iterations)
 
-	xmin, ymin, fmin, iterations := multidimensional.CoordinateDescent2D(pkg.F2, 1, 1, -4, 4, -4, 4, epsilon)
+	xmin, ymin, fmin, iterations := multidimensional.CoordinateDescent(pkg.F2, 1, 1, -4, 4, -4, 4, epsilon)
 	fmt.Printf("Метод покоординатного спуска:\n")
 	fmt.Printf("Минимум найден в точке (x,y) = (%f, %f), f(x,y) = %f\n", xmin, ymin, fmin)
 	fmt.Printf("Количество итераций: %d\n\n", iterations)
@@ -65,7 +65,7 @@ func main() {
 	fmt.Printf("Минимум найден в точке (x,y) = (%f, %f), f(x,y) = %f\n", xmin, ymin, fmin)
 	fmt.Printf("Количество итераций: %d\n\n", iterations)
 
-	xmin, ymin, fmin, iterations = multidimensional.SteepestDescent(pkg.F2, pkg.GradF2, 0, 0, epsilon)
+	xmin, ymin, fmin, iterations = multidimensional.SteepestGradientDescent(pkg.F2, pkg.GradF2, 0, 0, epsilon)
 	fmt.Printf("Метод наискорейшего градиентного спуска:\n")
 	fmt.Printf("Минимум найден в точке (x,y) = (%f, %f), f(x,y) = %f\n", xmin, ymin, fmin)
 	fmt.Printf("Количество итераций: %d\n\n", iterations)
@@ -75,7 +75,7 @@ func main() {
 	fmt.Printf("Минимум найден в точке (x,y) = (%f, %f), f(x,y) = %f\n", xmin, ymin, fmin)
 	fmt.Printf("Количество итераций: %d\n\n", iterations)
 
-	xmin, ymin, fmin, iterations = multidimensional.RavineStep(pkg.F2, pkg.GradF2, 0, 0, 0.5, 1, epsilon)
+	xmin, ymin, fmin, iterations = multidimensional.RavineGradientDescent(pkg.F2, pkg.GradF2, 0, 0, 0.5, 1, epsilon)
 	fmt.Printf("Овражный метод:\n")
 	fmt.Printf("Минимум найден в точке (x,y) = (%f, %f), f(x,y) = %f\n", xmin, ymin, fmin)
 	fmt.Printf("Количество итераций: %d\n\n", iterations)
@@ -101,18 +101,16 @@ func main() {
 	fmt.Printf("Найденные лямбды %f, %f\n", l1, l2)
 	fmt.Printf("Количество итераций: %d\n\n", iterations)
 
-	xmin, ymin, fmin, r, outerIt, innerIt := conditional.ExternalPenalty(
+	xmin, ymin, fmin, r, outerIt := conditional.ExternalPenalty(
 		pkg.F3, pkg.GradF3,
 		0, 0,
 		1,
 		10,
 		0.01,
 		0.001,
-		0.01,
 		10,
-		1000,
 	)
 	fmt.Printf("Метод Внешних штрафов:\n")
-	fmt.Printf("Минимум найден в точке (x,y) = (%f, %f), f(x,y) = %f, (r=%.2e)\n", xmin, ymin, fmin, r)
-	fmt.Printf("Количество итераций внутренних/внешних: %d/%d\n\n", innerIt, outerIt)
+	fmt.Printf("Минимум найден в точке (x,y) = (%f, %f), f(x,y) = %f, (r=%f)\n", xmin, ymin, fmin, r)
+	fmt.Printf("Количество итераций: %d\n\n", outerIt)
 }

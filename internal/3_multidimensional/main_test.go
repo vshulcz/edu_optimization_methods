@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestCoordinateDescent2D(t *testing.T) {
+func TestCoordinateDescent(t *testing.T) {
 	type args struct {
 		f   func(x, y float64) float64
 		x0  float64
@@ -41,23 +41,23 @@ func TestCoordinateDescent2D(t *testing.T) {
 			wantXmin:  -0.613225,
 			wantYmin:  -0.663293,
 			wantFmin:  -1.805292,
-			wantIters: 96000020,
+			wantIters: 428,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotXmin, gotYmin, gotFmin, gotIters := CoordinateDescent2D(tt.args.f, tt.args.x0, tt.args.y0, tt.args.ax, tt.args.bx, tt.args.ay, tt.args.by, tt.args.eps)
+			gotXmin, gotYmin, gotFmin, gotIters := CoordinateDescent(tt.args.f, tt.args.x0, tt.args.y0, tt.args.ax, tt.args.bx, tt.args.ay, tt.args.by, tt.args.eps)
 			if math.Abs(gotXmin-tt.wantXmin) > 1e-4 {
-				t.Errorf("CoordinateDescent2D() gotXmin = %v, want %v", gotXmin, tt.wantXmin)
+				t.Errorf("CoordinateDescent() gotXmin = %v, want %v", gotXmin, tt.wantXmin)
 			}
 			if math.Abs(gotYmin-tt.wantYmin) > 1e-4 {
-				t.Errorf("CoordinateDescent2D() gotYmin = %v, want %v", gotYmin, tt.wantYmin)
+				t.Errorf("CoordinateDescent() gotYmin = %v, want %v", gotYmin, tt.wantYmin)
 			}
 			if math.Abs(gotFmin-tt.wantFmin) > 1e-4 {
-				t.Errorf("CoordinateDescent2D() gotFmin = %v, want %v", gotFmin, tt.wantFmin)
+				t.Errorf("CoordinateDescent() gotFmin = %v, want %v", gotFmin, tt.wantFmin)
 			}
 			if gotIters != tt.wantIters {
-				t.Errorf("CoordinateDescent2D() gotIters = %v, want %v", gotIters, tt.wantIters)
+				t.Errorf("CoordinateDescent() gotIters = %v, want %v", gotIters, tt.wantIters)
 			}
 		})
 	}
@@ -123,7 +123,7 @@ func TestGradientDescentBacktracking(t *testing.T) {
 	}
 }
 
-func TestSteepestDescent(t *testing.T) {
+func TestSteepestGradientDescent(t *testing.T) {
 	type args struct {
 		f       func(x, y float64) float64
 		grad    func(x, y float64) (gx, gy float64)
@@ -178,18 +178,18 @@ func TestSteepestDescent(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotXmin, gotYmin, gotFmin, gotIters := SteepestDescent(tt.args.f, tt.args.grad, tt.args.x0, tt.args.y0, tt.args.gradEps)
+			gotXmin, gotYmin, gotFmin, gotIters := SteepestGradientDescent(tt.args.f, tt.args.grad, tt.args.x0, tt.args.y0, tt.args.gradEps)
 			if math.Abs(gotXmin-tt.wantXmin) > 1e-6 {
-				t.Errorf("SteepestDescent() gotXmin = %v, want %v", gotXmin, tt.wantXmin)
+				t.Errorf("SteepestGradientDescent() gotXmin = %v, want %v", gotXmin, tt.wantXmin)
 			}
 			if math.Abs(gotYmin-tt.wantYmin) > 1e-6 {
-				t.Errorf("SteepestDescent() gotYmin = %v, want %v", gotYmin, tt.wantYmin)
+				t.Errorf("SteepestGradientDescent() gotYmin = %v, want %v", gotYmin, tt.wantYmin)
 			}
 			if math.Abs(gotFmin-tt.wantFmin) > 1e-6 {
-				t.Errorf("SteepestDescent() gotFmin = %v, want %v", gotFmin, tt.wantFmin)
+				t.Errorf("SteepestGradientDescent() gotFmin = %v, want %v", gotFmin, tt.wantFmin)
 			}
 			if gotIters != tt.wantIters {
-				t.Errorf("SteepestDescent() gotIters = %v, want %v", gotIters, tt.wantIters)
+				t.Errorf("SteepestGradientDescent() gotIters = %v, want %v", gotIters, tt.wantIters)
 			}
 		})
 	}
@@ -270,7 +270,7 @@ func TestAcceleratedGradientDescent(t *testing.T) {
 	}
 }
 
-func TestRavineStep(t *testing.T) {
+func TestRavineGradientDescent(t *testing.T) {
 	type args struct {
 		f       func(x, y float64) float64
 		grad    func(x, y float64) (gx, gy float64)
@@ -329,18 +329,18 @@ func TestRavineStep(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotXmin, gotYmin, gotFmin, gotIters := RavineStep(tt.args.f, tt.args.grad, tt.args.x0, tt.args.y0, tt.args.delta, tt.args.p, tt.args.gradEps)
+			gotXmin, gotYmin, gotFmin, gotIters := RavineGradientDescent(tt.args.f, tt.args.grad, tt.args.x0, tt.args.y0, tt.args.delta, tt.args.p, tt.args.gradEps)
 			if math.Abs(gotXmin-tt.wantXmin) > 1e-6 {
-				t.Errorf("RavineStep() gotXmin = %v, want %v", gotXmin, tt.wantXmin)
+				t.Errorf("RavineGradientDescent() gotXmin = %v, want %v", gotXmin, tt.wantXmin)
 			}
 			if math.Abs(gotYmin-tt.wantYmin) > 1e-6 {
-				t.Errorf("RavineStep() gotYmin = %v, want %v", gotYmin, tt.wantYmin)
+				t.Errorf("RavineGradientDescent() gotYmin = %v, want %v", gotYmin, tt.wantYmin)
 			}
 			if math.Abs(gotFmin-tt.wantFmin) > 1e-6 {
-				t.Errorf("RavineStep() gotFmin = %v, want %v", gotFmin, tt.wantFmin)
+				t.Errorf("RavineGradientDescent() gotFmin = %v, want %v", gotFmin, tt.wantFmin)
 			}
 			if gotIters != tt.wantIters {
-				t.Errorf("RavineStep() gotIters = %v, want %v", gotIters, tt.wantIters)
+				t.Errorf("RavineGradientDescent() gotIters = %v, want %v", gotIters, tt.wantIters)
 			}
 		})
 	}
@@ -481,10 +481,10 @@ func TestQuasiNewton(t *testing.T) {
 				y0:      1.0,
 				gradEps: 0.05,
 			},
-			wantXmin:  0.0009394268730375316,
-			wantYmin:  0.01440979491160928,
-			wantFmin:  0.00021558489504270635,
-			wantIters: 141,
+			wantXmin:  0.0016676491865052516,
+			wantYmin:  0.0022439658770094474,
+			wantFmin:  3.0064867140447425e-05,
+			wantIters: 51,
 		},
 	}
 	for _, tt := range tests {
@@ -538,7 +538,7 @@ func TestConjGradFR(t *testing.T) {
 			wantXmin:  -0.613225,
 			wantYmin:  -0.663293,
 			wantFmin:  -1.805292,
-			wantIters: 1354,
+			wantIters: 166,
 		},
 		{
 			name: "Case 2: f(x,y) = 9*x*x + y*y",
@@ -553,10 +553,10 @@ func TestConjGradFR(t *testing.T) {
 				y0:      1.0,
 				gradEps: 0.05,
 			},
-			wantXmin:  -0.000654568730375316,
-			wantYmin:  0.01713477949116092,
-			wantFmin:  0.000297464884895042,
-			wantIters: 201,
+			wantXmin:  0.0004625978729986543,
+			wantYmin:  0.0023294319568673144,
+			wantFmin:  7.352224370600598e-06,
+			wantIters: 61,
 		},
 	}
 	for _, tt := range tests {
